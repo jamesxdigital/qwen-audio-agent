@@ -358,7 +358,7 @@ export function registerGatewayHttpRoutes(app, {
       return res.status(404).json({ error: '当前后台 Agent 没有独立的 Web 地址' })
     }
     try {
-      const url = await agent.uiUrl({ ownerId: req.identity.ownerId })
+      const url = await agent.uiUrl({ ownerId: req.identity.ownerId, sessionId: req.query.sessionId })
       if (!url) {
         return res.status(404).json({
           error: '当前后台 Agent 没有独立的 Web 地址',

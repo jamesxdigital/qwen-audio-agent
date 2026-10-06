@@ -167,6 +167,7 @@ export class AcpBackendAdapter {
       model: this.model,
     })
     this.registry = new AcpSessionRegistry({ filePath: sessionStatePath })
+    this.latestConversationByOwner = new Map()
     this.sessionToolServer = sessionToolServer || new AcpSessionToolServer()
     // Baseline stdio MCP servers (e.g. open-computer-use) injected into every
     // Session; backends spawn and connect to them on their own.
@@ -265,7 +266,7 @@ export class AcpBackendAdapter {
       transport: 'acp',
       acpConnection: this.profile.acpConnection?.kind || null,
       backendAgent: this.coordinatorAgent || null,
-      sessionModel: 'one-persistent-backend-agent',
+      sessionModel: 'backend-agent-per-conversation',
       capabilities: {
         ...this.profile.capabilities,
         taskUpdates: 'activity',
@@ -422,9 +423,9 @@ export class AcpBackendAdapter {
     return () => this.workEventListeners.delete(listener)
   }
 
-  async ensureCoordinatorSession(ownerId, mcpServers = []) {
+  async ensureCoordinatorSession(ownerId, mcpServers = [], conversationSessionId = 'main') {
     if (this.builtinMcp.length) this.builtinMcpLifecycle.markUsed()
-    const key = coordinatorKey(ownerId, this.protocol)
+    const key = coordinatorKey(ownerId, this.protocol, conversationSessionId, this.directory)
     if (this.coordinatorSessions.has(key)) {
       const session = this.coordinatorSessions.get(key)
       if (session.connectionGeneration === this.client.connectionGeneration) return session
@@ -489,9 +490,9 @@ export class AcpBackendAdapter {
     return pending
   }
 
-  async ensureCoordinatorToolRegistration(ownerId, context) {
+  async ensureCoordinatorToolRegistration(ownerId, context, conversationSessionId = 'main') {
     if (!this.profile.externalMcp) return null
-    const key = coordinatorKey(ownerId, this.protocol)
+    const key = coordinatorKey(ownerId, this.protocol, conversationSessionId, this.directory)
     const current = this.coordinatorToolRegistrations.get(key)
     if (current) {
       current.update(context)
@@ -943,6 +944,7 @@ export class AcpBackendAdapter {
 
   async coordinatorTurn(message, {
     ownerId,
+    conversationSessionId = 'main',
     coordinationRunId,
     coordinationRequestId,
     signal,
@@ -950,6 +952,7 @@ export class AcpBackendAdapter {
   }) {
     const run = {
       ownerId: clean(ownerId),
+      conversationSessionId,
       coordinationRunId: clean(coordinationRunId),
       coordinationRequestId: clean(coordinationRequestId)
         || clean(coordinationRunId),
@@ -964,7 +967,7 @@ export class AcpBackendAdapter {
     if (run.coordinationRunId) {
       this.coordinationRuns.set(run.coordinationRunId, run)
     }
-    const key = coordinatorKey(ownerId, this.protocol)
+    const key = coordinatorKey(ownerId, this.protocol, conversationSessionId, this.directory)
     const pendingFacts = this.registry.reconciliationsFor(key)
     const prompt = pendingFacts.length
       ? transformPromptText(message, content => [
@@ -976,12 +979,14 @@ export class AcpBackendAdapter {
     const registration = await this.ensureCoordinatorToolRegistration(
       ownerId,
       this.toolContext(run),
+      conversationSessionId,
     )
     const mcpServers = [
       ...(registration ? [registration.descriptor] : []),
       ...this.builtinMcp,
     ]
-    const session = await this.ensureCoordinatorSession(ownerId, mcpServers)
+    const session = await this.ensureCoordinatorSession(ownerId, mcpServers, conversationSessionId)
+    this.latestConversationByOwner.set(clean(ownerId), conversationSessionId)
     const permissionScopeId = `prompt_${randomUUID()}`
     run.sessionId = session.sessionId
     run.cwd = clean(session.cwd) || this.directory
@@ -1018,7 +1023,7 @@ export class AcpBackendAdapter {
         this.registry.acknowledgeReconciliations(key, pendingFacts)
       }
       this.registry.set(
-        coordinatorKey(ownerId, this.protocol),
+        key,
         session,
       )
       return {
@@ -1138,8 +1143,8 @@ export class AcpBackendAdapter {
     }
   }
 
-  discardCoordinatorSession(ownerId, sessionId = '') {
-    const key = coordinatorKey(ownerId, this.protocol)
+  discardCoordinatorSession(ownerId, sessionId = '', conversationSessionId = 'main') {
+    const key = coordinatorKey(ownerId, this.protocol, conversationSessionId, this.directory)
     const current = this.coordinatorSessions.get(key)
     if (!sessionId || current?.sessionId === sessionId) {
       this.coordinatorSessions.delete(key)
@@ -1152,7 +1157,7 @@ export class AcpBackendAdapter {
       return await this.coordinatorTurn(message, options)
     } catch (error) {
       if (!error?.recoverWithFreshCoordinator) throw error
-      this.discardCoordinatorSession(options.ownerId)
+      this.discardCoordinatorSession(options.ownerId, '', options.conversationSessionId)
       return this.coordinatorTurn(message, options)
     }
   }
@@ -1195,6 +1200,7 @@ export class AcpBackendAdapter {
       })
       const run = message => this.runCoordinator(message, {
         ownerId,
+        conversationSessionId: clean(work.sessionId) || 'main',
         coordinationRunId: taskId,
         coordinationRequestId: taskId,
         workObjective: objective,
@@ -1307,6 +1313,7 @@ export class AcpBackendAdapter {
 
   async runCoordinator(message, {
     ownerId,
+    conversationSessionId = 'main',
     coordinationRunId,
     coordinationRequestId,
     workObjective,
@@ -1318,7 +1325,7 @@ export class AcpBackendAdapter {
     // the first task after a cold start cannot race its bridge.
     await this.start({ signal })
     const runId = clean(coordinationRunId)
-    const key = coordinatorKey(ownerId, this.protocol)
+    const key = coordinatorKey(ownerId, this.protocol, conversationSessionId, this.directory)
     const publish = event => this.publishWorkEvent(event, {
       taskId: runId,
       ownerId,
@@ -1329,6 +1336,7 @@ export class AcpBackendAdapter {
         `coordinator:${key}`,
         () => this.coordinatorTurnWithRecovery(message, {
           ownerId,
+          conversationSessionId,
           coordinationRunId,
           coordinationRequestId,
           signal,
@@ -1362,6 +1370,7 @@ export class AcpBackendAdapter {
           this.delegationResultPrompt(target, workObjective),
           {
             ownerId,
+            conversationSessionId,
             coordinationRunId,
             coordinationRequestId,
             signal,
@@ -1397,16 +1406,18 @@ export class AcpBackendAdapter {
       })
     }
     const ownerId = clean(task.ownerId)
+    const conversationSessionId = clean(task.sessionId) || 'main'
     const coordinationRunId = clean(task.id)
     const publish = event => this.publishWorkEvent(event, {
       taskId: coordinationRunId,
       ownerId,
       onEvent,
     })
-    const key = coordinatorKey(ownerId, this.protocol)
-    const session = await this.ensureCoordinatorSession(ownerId)
+    const key = coordinatorKey(ownerId, this.protocol, conversationSessionId, this.directory)
+    const session = await this.ensureCoordinatorSession(ownerId, [], conversationSessionId)
     const run = {
       ownerId,
+      conversationSessionId,
       coordinationRunId,
       coordinationRequestId: coordinationRunId,
       onEvent: publish,
@@ -1457,6 +1468,7 @@ export class AcpBackendAdapter {
           this.delegationResultPrompt(target, task.objective),
           {
             ownerId,
+            conversationSessionId,
             coordinationRunId,
             coordinationRequestId: coordinationRunId,
             signal,
@@ -1486,7 +1498,7 @@ export class AcpBackendAdapter {
     // projected into the next coordinator turn and acknowledged on success.
     if (run?.sessionId) {
       this.registry.appendReconciliation(
-        coordinatorKey(ownerId, this.protocol),
+        coordinatorKey(ownerId, this.protocol, run.conversationSessionId, this.directory),
         {
           kind: 'coordination_request_terminated',
           request_id: run.coordinationRequestId || clean(taskId),
@@ -1598,9 +1610,10 @@ export class AcpBackendAdapter {
     }
   }
 
-  async uiUrl(ownerId) {
+  async uiUrl(ownerId, conversationSessionId) {
     if (!this.profile.uiUrl) return null
-    const key = coordinatorKey(ownerId, this.protocol)
+    const key = coordinatorKey(ownerId, this.protocol,
+      conversationSessionId || this.latestConversationByOwner.get(clean(ownerId)), this.directory)
     const session = this.coordinatorSessions.get(key) || this.registry.get(key)
     return this.profile.uiUrl({
       baseUrl: this.baseUrl,

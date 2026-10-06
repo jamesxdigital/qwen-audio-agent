@@ -23,6 +23,7 @@ export class BackendWorkRuntime {
     const work = {
       id: taskId,
       ownerId: clean(options.ownerId),
+      sessionId: clean(options.sessionId) || 'main',
       instruction: input?.instruction,
       objective: input?.objective,
       inputParts: input?.inputParts || [],

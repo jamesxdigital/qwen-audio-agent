@@ -78,7 +78,7 @@ export class AgentClient {
   }
 
   uiUrl(options = {}) {
-    return this.adapter.uiUrl?.(options.ownerId) || Promise.resolve(null)
+    return this.adapter.uiUrl?.(options.ownerId, options.sessionId) || Promise.resolve(null)
   }
 
   close() {

@@ -3,6 +3,7 @@ import { mkdtempSync, rmSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import test from 'node:test'
+import { coordinatorKey } from '../src/backend/adapters/acp/backend-session-utils.mjs'
 import {
   AcpBackendAdapter,
   acpBackendProfile,
@@ -1601,7 +1602,7 @@ test('busy-coordinator cancellation uses ACP directly and reconciles on the next
   )
   assert.doesNotMatch(followUp[2], /work-one|request_id|delegation_id/)
   assert.equal(
-    adapter.registry.reconciliationsFor('opencode:owner-one:backend').length,
+    adapter.registry.reconciliationsFor(coordinatorKey('owner-one', 'opencode', 'main', adapter.directory)).length,
     0,
   )
   await adapter.close()
@@ -1668,7 +1669,7 @@ test('ordinary coordinator cancellation terminates the old request before the ne
   assert.doesNotMatch(prompts[1], /job_1|work-one|request_id/)
   assert.match(prompts[1], /仅处理以下新请求/)
   assert.deepEqual(
-    adapter.registry.reconciliationsFor('qoder:owner-one:backend'),
+    adapter.registry.reconciliationsFor(coordinatorKey('owner-one', 'qoder', 'main', adapter.directory)),
     [],
   )
   assert.equal(adapter.coordinationRuns.has('work-one'), false)
@@ -1767,7 +1768,7 @@ test('delivers persisted cancellation reconciliation after a Gateway restart', a
       /job_21|work-before-restart|request_id/,
     )
     assert.deepEqual(
-      secondAdapter.registry.reconciliationsFor('qoder:owner-one:backend'),
+      secondAdapter.registry.reconciliationsFor(coordinatorKey('owner-one', 'qoder', 'main', secondAdapter.directory)),
       [],
     )
     await secondAdapter.close()

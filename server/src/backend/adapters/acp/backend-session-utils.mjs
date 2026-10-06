@@ -7,8 +7,9 @@ function bounded(value, max = 300) {
   return clean(value).replace(/\s+/g, ' ').slice(0, max)
 }
 
-export function coordinatorKey(ownerId, protocol) {
-  return `${protocol}:${encodeURIComponent(clean(ownerId) || 'personal')}:backend`
+export function coordinatorKey(ownerId, protocol, conversationSessionId, directory) {
+  return [protocol, clean(ownerId) || 'personal', clean(conversationSessionId) || 'main', clean(directory)]
+    .map(encodeURIComponent).join(':') + ':backend'
 }
 
 export function projectSessionKey(protocol, sessionId) {

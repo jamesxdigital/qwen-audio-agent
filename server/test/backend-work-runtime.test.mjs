@@ -44,12 +44,14 @@ test('submits structured Gateway Work with one model-facing instruction', async 
   }, {
     ownerId: 'owner-one',
     taskId: 'task_8',
+    sessionId: 'voice-one',
     signal,
     onEvent: event => events.push(event),
   })
   assert.deepEqual(submitted, {
     id: 'task_8',
     ownerId: 'owner-one',
+    sessionId: 'voice-one',
     objective: '检查项目',
     instruction: '检查项目',
     inputParts: [],
