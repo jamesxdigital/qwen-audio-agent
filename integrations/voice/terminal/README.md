@@ -22,11 +22,11 @@ Qwen runs directly from this checkout, based on v2.0.1. The terminal resolves th
 
 The renderer provides thinking (when emitted by the backend), tools, results, and replies. A direct answer from the speech model does not invoke the coding backend. Ask it to delegate a coding task to the selected backend to see its activity.
 
-## Live OpenCode window
+## Live OpenCode tab
 
-On the first OpenCode coding task, `voice` automatically opens one dedicated Ghostty window using the documented `opencode attach` command. It attaches to the HTTP server inside the same ACP process that executes the task, with the exact native session ID and workspace. Replies and tool activity stream live into both windows. Clicking **New session** in Qwen switches that dedicated TUI to the new coding session when its first task starts. It does not open another window for each task.
+On the first OpenCode coding task, `voice` automatically opens one dedicated tab in the front Ghostty window using [Ghostty’s native AppleScript API](https://ghostty.org/docs/features/applescript) and the documented `opencode attach` command. Node, the follower script, and its state path are passed as one quoted command. Ghostty 1.3 or newer with AppleScript enabled is required; macOS may request Automation permission on the first launch. It attaches to the HTTP server inside the same ACP process that executes the task, with the exact native session ID and workspace. Replies and tool activity stream live into both tabs. Clicking **New session** in Qwen switches that dedicated TUI to the new coding session when its first task starts. It does not open another tab for each task. If Ghostty has no window, it creates one for the live TUI.
 
-Closing the dedicated window leaves voice running. Stopping `voice` stops its attached TUI. Pi does not open an OpenCode window. Use `VOICE_TUI=0 voice` to disable automatic opening for a launch.
+Closing the dedicated tab leaves voice running. Stopping `voice` stops its attached TUI. Pi does not open an OpenCode tab. Use `VOICE_TUI=0 voice` to disable automatic opening for a launch.
 
 The ACP process binds a free loopback port for its lifetime; it is separate from Qwen's managed OpenCode UI service on port 4096. The port, native session ID, and workspace are held in an owner-only temporary state file. The TUI follower watches that state and reattaches when the session changes. Server credentials, if configured, are passed privately through the environment.
 
@@ -53,3 +53,7 @@ qwenaudio gateway pair --endpoint https://jamesxmacbook.taild0952b.ts.net --name
 ```
 
 Open the generated link, click Connect, and allow microphone access. Keep the Mac awake and voice running. Switching active devices may ask to take over the current client. Connection links contain private device credentials.
+
+## Verification
+
+From the repository root, run `npm run test:voice-terminal`. These tests cover one-time tab creation, session switching without additional tabs, disabled mode, launch errors, cleanup, and the compiled AppleScript command's handling of quoted paths. The command execution check runs on macOS without opening Ghostty.

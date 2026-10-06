@@ -2,7 +2,7 @@
 
 This fork keeps the Gateway changes, terminal launcher, and local speech service in one checkout. The speech service remains a separate process connected to the Gateway over `ws://127.0.0.1:8765/v1/realtime`.
 
-- [`terminal/`](terminal/README.md): `voice`, ACP activity display, and the live OpenCode window in Ghostty.
+- [`terminal/`](terminal/README.md): `voice`, ACP activity display, and the live OpenCode tab in Ghostty.
 - [`local-speech/`](local-speech/README.md): local Parakeet speech recognition, Kokoro or Qwen3 speech output, and an OpenCode Go conversation adapter.
 
 Audio is processed locally by the speech service. Transcribed text, instructions, and conversation history go to DeepSeek through OpenCode Go. Coding tasks are delegated by the Gateway to OpenCode or Pi.

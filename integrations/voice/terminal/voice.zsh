@@ -19,7 +19,7 @@ voice() (
       print 'Default: OpenCode · model: opencode-go/deepseek-v4.1-flash'
       print 'Private Tailnet HTTPS is enabled while voice runs.'
       print 'Each launch starts a new conversation and coding session.'
-      print 'OpenCode opens a live TUI in Ghostty on the first coding task. VOICE_TUI=0 disables it.'
+      print 'OpenCode opens a live TUI tab in Ghostty on the first coding task. VOICE_TUI=0 disables it.'
       print 'Run from your project directory. VOICE_VERBOSE=1 shows full logs.'
       return 0
       ;;

@@ -328,7 +328,7 @@
     "docs:preview": "vitepress preview docs",
     "eval:frontend": "node server/eval/run-frontend-evaluations.mjs",
     "test:ai-passport": "node --test examples/ai-passport/*.test.mjs",
-    "test": "node --test test/*.test.mjs && npm run test --workspace server && npm run test --workspace web && npm run test --workspace tui && npm run test --workspace desktop && npm run test --workspace @qwen-audio-agent/cli && npm run test --workspace @qwen-audio-agent/mobile && npm run test:smart-cockpit && npm run test:ai-passport && npm run test:customer-service",
+    "test": "node --test test/*.test.mjs && npm run test --workspace server && npm run test --workspace web && npm run test --workspace tui && npm run test --workspace desktop && npm run test --workspace @qwen-audio-agent/cli && npm run test --workspace @qwen-audio-agent/mobile && npm run test:smart-cockpit && npm run test:ai-passport && npm run test:customer-service && npm run test:voice-terminal",
     "pretest:smart-cockpit": "npm ci --prefix examples/smart-cockpit/service --ignore-scripts && npm ci --prefix examples/smart-cockpit/agent --ignore-scripts",
     "test:smart-cockpit": "npm test --prefix examples/smart-cockpit/service && npm test --prefix examples/smart-cockpit/agent && node --test examples/smart-cockpit/bench/test/*.test.mjs examples/smart-cockpit/bootstrap/test/*.test.mjs examples/smart-cockpit/client/test/*.test.mjs examples/smart-cockpit/gateway/test/*.test.mjs examples/smart-cockpit/test/*.test.mjs",
     "pretest:customer-service": "npm ci --prefix examples/customer-service/service --ignore-scripts && npm ci --prefix examples/customer-service/agent --ignore-scripts && npm ci --prefix examples/customer-service/console --ignore-scripts && npm ci --prefix examples/customer-service/client --ignore-scripts && npm ci --prefix examples/customer-service/desk --ignore-scripts",
@@ -342,7 +342,8 @@
     "version:patch": "node scripts/set-version.mjs patch",
     "version:minor": "node scripts/set-version.mjs minor",
     "version:major": "node scripts/set-version.mjs major",
-    "release:check": "./scripts/release-check"
+    "release:check": "./scripts/release-check",
+    "test:voice-terminal": "node --test integrations/voice/terminal/test/*.test.mjs"
   },
   "dependencies": {
     "@a2a-js/sdk": "1.1.0",

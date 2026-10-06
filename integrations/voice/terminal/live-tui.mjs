@@ -34,20 +34,23 @@ export class LiveTui {
     renameSync(temporary, this.path);
     if (this.opened) return;
     this.opened = true;
-    const child = this.open('/usr/bin/open', [
-      '-na', '/Applications/Ghostty.app', '--args',
-      `--working-directory=${state.directory}`, '-e', process.execPath,
-      fileURLToPath(new URL('./voice-tui.mjs', import.meta.url)), this.path,
-    ], { stdio: 'ignore' });
+    const child = this.open('/usr/bin/osascript', [
+      fileURLToPath(new URL('./open-live-tab.applescript', import.meta.url)),
+      process.execPath,
+      fileURLToPath(new URL('./voice-tui.mjs', import.meta.url)),
+      this.path, state.directory,
+    ], { stdio: ['ignore', 'ignore', 'pipe'] });
+    let launchError = '';
+    child.stderr.on('data', chunk => { launchError = `${launchError}${chunk}`.slice(-2000); });
     child.once('error', error => {
       this.opened = false;
       this.onStatus(`OpenCode live TUI could not open · ${error.code || 'unknown error'}`);
     });
     child.once('exit', code => {
-      if (code === 0) this.onStatus('OpenCode live TUI · opened in Ghostty');
+      if (code === 0) this.onStatus('OpenCode live TUI · tab opened in Ghostty');
       else {
         this.opened = false;
-        this.onStatus(`OpenCode live TUI could not open · exit ${code}`);
+        this.onStatus(`OpenCode live TUI could not open · ${launchError.trim() || `exit ${code}`}`);
       }
     });
   }
