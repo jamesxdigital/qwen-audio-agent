@@ -1,5 +1,7 @@
 # Qwen Audio Agent
 
+James's fork includes conversation-scoped coding sessions, a voice terminal with live OpenCode attachment, and a local speech-service launcher. See [the voice setup](integrations/voice/README.md) and [local changes](LOCAL_CHANGES.md).
+
 [中文](README_ZH.md) | [English](README.md) | [User Guide](https://qwenaudio.github.io/qwen-audio-agent/) | [Quickstart](https://qwenaudio.github.io/qwen-audio-agent/getting-started/quickstart) | [Paper](https://arxiv.org/pdf/2609.25195)
 
 [![CI](https://github.com/QwenAudio/qwen-audio-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/QwenAudio/qwen-audio-agent/actions/workflows/ci.yml)

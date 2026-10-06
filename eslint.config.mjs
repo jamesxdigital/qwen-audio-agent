@@ -9,6 +9,7 @@ export default [
   {
     ignores: [
       '**/node_modules/**',
+      '**/.venv/**',
       '**/dist/**',
       '**/coverage/**',
       'docs/.vitepress/cache/**',
