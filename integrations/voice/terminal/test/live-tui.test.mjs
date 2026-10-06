@@ -80,7 +80,7 @@ test('disabled live TUI does not create a tab or state file', t => {
   assert.equal(existsSync(tui.path), false);
 });
 
-test('native opener command runs Node with intact quoted script and state paths', { skip: process.platform !== 'darwin' }, t => {
+test('Ghostty macOS login wrapper runs Node with intact quoted script and state paths', { skip: process.platform !== 'darwin' }, t => {
   const directory = mkdtempSync(join(tmpdir(), "voice ' $HOME `uname` "));
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const follower = join(directory, "follower ' $HOME.mjs");
@@ -99,7 +99,7 @@ writeFileSync(join(dirname(process.argv[2]), 'result.json'), JSON.stringify({ ar
     end run`,
     compiled, process.execPath, follower, state,
   ], { encoding: 'utf8' }).trim();
-  execFileSync('/bin/sh', ['-c', command], { cwd: directory });
+  execFileSync('/bin/bash', ['--noprofile', '--norc', '-c', `exec -l ${command}`], { cwd: directory });
   const result = JSON.parse(readFileSync(output));
   assert.deepEqual(result.args, [state]);
   assert.equal(result.cwd, realpathSync(directory));

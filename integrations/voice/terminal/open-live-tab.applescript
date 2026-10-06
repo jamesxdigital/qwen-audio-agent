@@ -22,6 +22,6 @@ on run argv
 end run
 
 on followerCommand(nodePath, followerPath, statePath)
-    -- Surface configuration commands are already shell commands; no shell: prefix.
-    return "exec " & quoted form of nodePath & " " & quoted form of followerPath & " " & quoted form of statePath
+    -- Ghostty adds exec -l through its macOS login wrapper.
+    return quoted form of nodePath & " " & quoted form of followerPath & " " & quoted form of statePath
 end followerCommand

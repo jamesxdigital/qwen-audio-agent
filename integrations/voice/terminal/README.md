@@ -56,4 +56,4 @@ Open the generated link, click Connect, and allow microphone access. Keep the Ma
 
 ## Verification
 
-From the repository root, run `npm run test:voice-terminal`. These tests cover one-time tab creation, session switching without additional tabs, disabled mode, launch errors, cleanup, and the compiled AppleScript command's handling of quoted paths. The command execution check runs on macOS without opening Ghostty.
+From the repository root, run `npm run test:voice-terminal`. These tests cover one-time tab creation, session switching without additional tabs, disabled mode, launch errors, cleanup, and the compiled AppleScript command running through Ghostty’s macOS `exec -l` login wrapper with quoted paths. The command execution check runs on macOS without opening Ghostty.
