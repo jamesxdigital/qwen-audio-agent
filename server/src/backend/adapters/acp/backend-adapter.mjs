@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto'
+import { logger } from '../../../core/logger.mjs'
 import { AgentError } from '../../agent-error.mjs'
 import { BackendEventType, backendEvent } from '../../../core/backend-events.mjs'
 import {
@@ -484,6 +485,13 @@ export class AcpBackendAdapter {
       await this.configureSession(session, 'coordinator')
       this.coordinatorSessions.set(key, session)
       this.registry.set(key, session)
+      logger.info('acp.coordinator_session_selected', {
+        backend: this.label,
+        sessionId: session.sessionId,
+        conversationSessionId,
+        directory: session.cwd,
+        ownerId,
+      })
       return session
     })().finally(() => this.coordinatorSessionPromises.delete(key))
     this.coordinatorSessionPromises.set(key, pending)

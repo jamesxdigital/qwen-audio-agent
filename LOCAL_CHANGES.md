@@ -6,6 +6,8 @@ Backend work carries the frontend conversation ID. ACP coordinator sessions, the
 
 The web **New session** button also updates the URL's `session` parameter, so a reload retains the new conversation. The shell launcher in `/Users/james/tools/qwen-voice-terminal/voice.zsh` opens each launch with a fresh conversation ID.
 
+The ACP adapter emits `acp.coordinator_session_selected` after creating or restoring a coordinator. The voice terminal uses this event to follow the selected native session in a dedicated Ghostty TUI. Its trace wrapper binds the OpenCode ACP process's own HTTP server to a free loopback port; the TUI attaches to that server, rather than the separate managed UI service. The live window is optional with `VOICE_TUI=0` and does not apply to Pi.
+
 The global `qwenaudio` executable is linked directly to this checkout using `npm link`. Both `voice` and `qwenaudio` run this source tree; there is no separate installed copy to synchronize. This is a local clone and branch, not a published GitHub fork. Installing an upstream global npm release replaces the link. To update, merge an upstream release into this branch, review changes, install its dependencies, run the relevant session tests, and rebuild the web UI:
 
 ```zsh
